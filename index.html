@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Заголовок</title>
+    <!-- Bootstrap -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">Steam</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-menu">
+      <ul class="nav navbar-nav navbar-right">
+          <li><a href="#" id="el-add"><span class="glyphicon glyphicon-plus"></span> Добавить</a></li>
+        </li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+<div class="modal fade" tabindex="-1" id="itemAddForm" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Добавление</h4>
+      </div>
+      <form class="form-horizontal">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="inputName" class="col-sm-4 control-label">Имя</label>
+          <div class="col-sm-8">
+            <input type="string" class="form-control" id="inputName" placeholder="Имя">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inputLastName" class="col-sm-4 control-label">Фамилия</label>
+          <div class="col-sm-8">
+            <input type="string" class="form-control" id="inputLastName" placeholder="Фамилия">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inputMiddleName" class="col-sm-4 control-label">Отчество</label>
+          <div class="col-sm-8">
+            <input type="string" class="form-control" id="inputMiddleName" placeholder="Отчество">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary" id="itemAddButton">Сохранить</button>
+      </div>
+      </form>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="container">
+  <table class="table table-bordered" id="itemList">
+    
+  </table>
+</div>
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      function ItemData(){
+        var self = this;
+        self.list = {};
+        self.next = 0;
+        self.getAll = function(){
+          return self.list;
+        }
+        self.add = function(item){
+          self.list[self.next] = item;
+          self.next++;
+        }
+        self.rm = function(uid){
+          delete self.list[uid];
+        }
+        self.edit = function(uid,item){
+          self.list[uid] = item;
+        }
+        self.get = function(uid){
+          return self.list[uid];
+        }
+        return self;
+      }
+
+      function DomData(){
+        var self = this;
+        self.list = {};
+        self.get = function(el){
+          if(self.list[el] == undefined) {
+            self.list[el] = $(el);
+          }
+          return self.list[el];
+        }
+        return self;
+      }
+
+      function Form(){
+        var self = this;
+        self.init = function(){
+          self.dom = new DomData();
+          self.item = new ItemData();
+        };
+        self.show = function(type){
+          if(type == 'add'){
+            self.uid = -1;
+          }
+          self.dom.get("#itemAddForm .modal-title").text(type == 'add' ? 'Добавить' : 'Изменить');
+          self.dom.get("#itemAddForm").modal('show');
+        };
+        self.save = function(){
+          var item = {};
+          item['name'] = self.dom.get('#inputName').val();
+          item['lastName'] = self.dom.get('#inputLastName').val();
+          item['middleName'] = self.dom.get('#inputMiddleName').val();
+          self.dom.get('#inputName').val('');
+          self.dom.get('#inputLastName').val('');
+          self.dom.get('#inputMiddleName').val('');
+          if(self.uid < 0)
+            self.item.add(item);
+          else {
+            self.item.edit(self.uid,item);
+          }
+          self.dom.get("#itemAddForm").modal('hide');
+          self.reItem();
+        }
+        self.reItem = function(){
+          var list = self.item.getAll();
+          var itemList = [];
+          for(var el in list){
+            itemList.push("<tr><td>"+el+"</td><td>"+list[el].name+"</td><td>"+list[el].lastName+"</td><td>"+list[el].middleName+"</td>"+
+              "<td><button class='btn btn-success' type='button' onClick='edit("+el+")'><span class='glyphicon glyphicon-pencil'></span></button></td>"+
+              "<td><button class='btn btn-danger' type='button' onClick='remove("+el+")'><span class='glyphicon glyphicon-remove'></span></button></td>"+
+              "</tr>");
+          }
+          self.dom.get('#itemList').html(itemList.join(''));
+        }
+        self.uid = -1;
+        self.edit = function(uid){
+          self.uid = uid;
+          var item = self.item.get(uid);
+          self.dom.get('#inputName').val(item.name);
+          self.dom.get('#inputLastName').val(item.lastName);
+          self.dom.get('#inputMiddleName').val(item.middleName);
+          self.show('edit');
+        };
+        self.remove = function(uid){
+          self.item.rm(uid);
+          self.reItem();
+        };
+        return self.init();
+      }
+
+
+
+
+      var form = new Form();
+      $(function(){
+        form.dom.get("#el-add").on('click',function(event){
+          event.stopPropagation();
+          form.show('add');
+        });
+        form.dom.get("#itemAddButton").on('click',function(event){
+          form.save();
+        });
+      });
+      function edit(uid){
+        return form.edit(uid);
+      }
+      function remove(uid){
+        return form.remove(uid);
+      }
+    </script>
+  </body>
+</html>
